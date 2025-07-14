@@ -185,6 +185,7 @@ const Gallery = () => {
                   >
                     <div className="h-48 bg-gradient-to-br from-saffron-100 to-emerald-100 flex items-center justify-center relative overflow-hidden group">
                       <img 
+                      loading="lazy"
                         src={album.photos?.[0] || "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=400"} 
                         alt={album.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -229,6 +230,7 @@ const Gallery = () => {
                 
                 <div className="relative">
                   <img
+                  loading="lazy"
                     src={selectedAlbum.photos[currentImageIndex]}
                     alt={`${selectedAlbum.title} - Photo ${currentImageIndex + 1}`}
                     className="w-full h-[500px] object-cover"
@@ -274,6 +276,7 @@ const Gallery = () => {
                   <div className="flex gap-2">
                     {selectedAlbum.photos.map((photo: string, index: number) => (
                       <img
+                      loading="lazy"
                         key={index}
                         src={photo}
                         alt={`Thumbnail ${index + 1}`}

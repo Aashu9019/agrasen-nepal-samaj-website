@@ -220,6 +220,7 @@ const Events = () => {
                   >
                     <div className="relative">
                       <img
+                      loading="lazy"
                         src={event.image}
                         alt={event.title}
                         className="w-full h-48 object-cover"
@@ -336,6 +337,7 @@ const Events = () => {
                   >
                     <div className="relative">
                       <img
+                    loading="lazy"
                         src={event.image}
                         alt={event.title}
                         className="w-full h-48 object-cover"
@@ -454,6 +456,7 @@ const Events = () => {
             {events.slice(0, 8).map((event, index) => (
               <div key={index} className="relative group overflow-hidden rounded-lg shadow-lg">
                 <img
+                loading="lazy"
                   src={event.image}
                   alt={event.title}
                   className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
@@ -479,6 +482,7 @@ const Events = () => {
             
             <div className="space-y-6">
               <img
+              loading="lazy"
                 src={selectedEvent.image}
                 alt={selectedEvent.title}
                 className="w-full h-64 object-cover rounded-lg"

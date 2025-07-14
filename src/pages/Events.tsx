@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Events = () => {
   const [filter, setFilter] = useState("all");
@@ -86,6 +87,9 @@ const Events = () => {
     }
   ];
 
+  const upcomingEvents = events.filter(event => event.status === "upcoming");
+  const previousEvents = events.filter(event => event.status === "past");
+
   const filteredEvents = events.filter(event => {
     const matchesFilter = filter === "all" || event.category === filter || event.status === filter;
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,107 +138,177 @@ const Events = () => {
         </div>
       </section>
 
-      {/* Filters and Search */}
+      {/* Event Categories */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          {/* Search Bar */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-8">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Tabs for Upcoming and Previous Events */}
+          <Tabs defaultValue="upcoming" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="upcoming" className="text-base">
+                Upcoming Events ({upcomingEvents.length})
+              </TabsTrigger>
+              <TabsTrigger value="previous" className="text-base">
+                Previous Events ({previousEvents.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upcoming">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {upcomingEvents
+                  .filter(event => 
+                    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    event.description.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((event) => (
+                  <Card key={event.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200">
+                    <div className="relative">
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute top-4 right-4 flex gap-2">
+                        <Badge className={getCategoryColor(event.category)}>
+                          {event.category}
+                        </Badge>
+                        <Badge className="bg-green-100 text-green-800">
+                          Upcoming
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <CardHeader>
+                      <CardTitle className="text-maroon-700 text-xl">{event.title}</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        {event.description}
+                      </CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 text-saffron-600" />
+                        <span>{formatDate(event.date)}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4 text-emerald-600" />
+                        <span>{event.time}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 text-maroon-600" />
+                        <span>{event.venue}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Users className="h-4 w-4 text-gold-600" />
+                        <span>{event.attendees} attendees</span>
+                      </div>
+                      
+                      <div className="pt-4">
+                        <Button className="w-full bg-saffron-600 hover:bg-saffron-700 text-white">
+                          Register Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter events" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Events</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="past">Past Events</SelectItem>
-                  <SelectItem value="festival">Festivals</SelectItem>
-                  <SelectItem value="meeting">Meetings</SelectItem>
-                  <SelectItem value="cultural">Cultural</SelectItem>
-                  <SelectItem value="social">Social</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Events Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredEvents.map((event) => (
-              <Card key={event.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200">
-                <div className="relative">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <Badge className={getCategoryColor(event.category)}>
-                      {event.category}
-                    </Badge>
-                    <Badge className={getStatusColor(event.status)}>
-                      {event.status}
-                    </Badge>
-                  </div>
+              {upcomingEvents.filter(event => 
+                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                event.description.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-lg text-gray-600">No upcoming events found.</p>
                 </div>
-                
-                <CardHeader>
-                  <CardTitle className="text-maroon-700 text-xl">{event.title}</CardTitle>
-                  <CardDescription className="text-gray-600">
-                    {event.description}
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4 text-saffron-600" />
-                    <span>{formatDate(event.date)}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Clock className="h-4 w-4 text-emerald-600" />
-                    <span>{event.time}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 text-maroon-600" />
-                    <span>{event.venue}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Users className="h-4 w-4 text-gold-600" />
-                    <span>{event.attendees} attendees</span>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <Button 
-                      className={`w-full ${event.status === 'upcoming' 
-                        ? 'bg-saffron-600 hover:bg-saffron-700' 
-                        : 'bg-gray-400 hover:bg-gray-500'
-                      } text-white`}
-                      disabled={event.status === 'past'}
-                    >
-                      {event.status === 'upcoming' ? 'Register Now' : 'View Gallery'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+              )}
+            </TabsContent>
 
-          {filteredEvents.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-lg text-gray-600">No events found matching your criteria.</p>
-            </div>
-          )}
+            <TabsContent value="previous">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {previousEvents
+                  .filter(event => 
+                    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    event.description.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((event) => (
+                  <Card key={event.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200">
+                    <div className="relative">
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute top-4 right-4 flex gap-2">
+                        <Badge className={getCategoryColor(event.category)}>
+                          {event.category}
+                        </Badge>
+                        <Badge className="bg-gray-100 text-gray-600">
+                          Completed
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <CardHeader>
+                      <CardTitle className="text-maroon-700 text-xl">{event.title}</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        {event.description}
+                      </CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 text-saffron-600" />
+                        <span>{formatDate(event.date)}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4 text-emerald-600" />
+                        <span>{event.time}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 text-maroon-600" />
+                        <span>{event.venue}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Users className="h-4 w-4 text-gold-600" />
+                        <span>{event.attendees} attendees</span>
+                      </div>
+                      
+                      <div className="pt-4">
+                        <Button className="w-full bg-gray-400 hover:bg-gray-500 text-white">
+                          View Gallery
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {previousEvents.filter(event => 
+                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                event.description.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-lg text-gray-600">No previous events found.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
 

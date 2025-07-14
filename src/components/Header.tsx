@@ -28,9 +28,9 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <img
-              src="/lovable-uploads/4c8e1252-8fc4-4179-b13a-d4d7a06f9936.png"
+              src="../././Images/logo.png"
               alt="Maharaja Agrasen"
-              className="h-16 w-auto"
+              className="h-20 w-auto"
             />
             <div className="text-left">
               <h1 className="text-2xl font-bold text-maroon-800 font-serif">

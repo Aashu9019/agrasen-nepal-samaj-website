@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Membership = () => {
   const [formData, setFormData] = useState({
+    // Personal Information
     fullName: "",
     fatherName: "",
     motherName: "",
@@ -20,6 +21,8 @@ const Membership = () => {
     maritalStatus: "",
     spouseName: "",
     occupation: "",
+    annualIncome: "",
+    // Contact Information
     email: "",
     phone: "",
     alternatePhone: "",
@@ -27,10 +30,17 @@ const Membership = () => {
     permanentAddress: "",
     city: "",
     district: "",
+    // Family Information
     familyMembers: "",
     businessDetails: "",
+    // Preferences
     newsletter: false,
-    terms: false
+    terms: false,
+    // Metadata for backend
+    submissionDate: "",
+    status: "pending",
+    membershipId: "",
+    profilePhoto: null as File | null
   });
 
   const { toast } = useToast();
@@ -71,8 +81,37 @@ const Membership = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+          title: "File too large",
+          description: "Please upload a photo smaller than 2MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+      setFormData(prev => ({ ...prev, profilePhoto: file }));
+      toast({
+        title: "Photo uploaded",
+        description: "Profile photo has been successfully uploaded."
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const requiredFields = ['fullName', 'fatherName', 'dateOfBirth', 'gotra', 'email', 'phone', 'currentAddress', 'city'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Missing required fields",
+        description: `Please fill in: ${missingFields.join(', ')}`,
+        variant: "destructive"
+      });
+      return false;
+    }
     
     if (!formData.terms) {
       toast({
@@ -80,38 +119,109 @@ const Membership = () => {
         description: "You must accept the terms and conditions to proceed.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
-    console.log("Form submitted:", formData);
-    
-    toast({
-      title: "Registration Successful!",
-      description: "Your membership application has been submitted. We will contact you soon.",
-    });
+    return true;
+  };
 
-    // Reset form
-    setFormData({
-      fullName: "",
-      fatherName: "",
-      motherName: "",
-      dateOfBirth: "",
-      gotra: "",
-      maritalStatus: "",
-      spouseName: "",
-      occupation: "",
-      email: "",
-      phone: "",
-      alternatePhone: "",
-      currentAddress: "",
-      permanentAddress: "",
-      city: "",
-      district: "",
-      familyMembers: "",
-      businessDetails: "",
-      newsletter: false,
-      terms: false
-    });
+  const generateMembershipId = () => {
+    const year = new Date().getFullYear();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `NAS${year}${random}`;
+  };
+
+  const prepareDataForBackend = (data: typeof formData) => {
+    return {
+      membershipId: generateMembershipId(),
+      submissionDate: new Date().toISOString(),
+      status: "pending",
+      personalInfo: {
+        fullName: data.fullName,
+        fatherName: data.fatherName,
+        motherName: data.motherName,
+        dateOfBirth: data.dateOfBirth,
+        gotra: data.gotra,
+        maritalStatus: data.maritalStatus,
+        spouseName: data.spouseName,
+        occupation: data.occupation,
+        annualIncome: data.annualIncome
+      },
+      contactInfo: {
+        email: data.email,
+        phone: data.phone,
+        alternatePhone: data.alternatePhone,
+        currentAddress: data.currentAddress,
+        permanentAddress: data.permanentAddress,
+        city: data.city,
+        district: data.district
+      },
+      familyInfo: {
+        familyMembers: data.familyMembers,
+        businessDetails: data.businessDetails
+      },
+      preferences: {
+        newsletter: data.newsletter
+      },
+      profilePhoto: data.profilePhoto, // This would be handled by file upload service
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    try {
+      // Prepare data for backend
+      const backendData = prepareDataForBackend(formData);
+      
+      // Here you would typically make an API call to your backend
+      // Example: await fetch('/api/membership', { method: 'POST', body: JSON.stringify(backendData) })
+      
+      console.log("Prepared data for backend:", backendData);
+      
+      toast({
+        title: "Registration Successful!",
+        description: `Your membership application has been submitted. Your membership ID is ${backendData.membershipId}. We will contact you soon.`,
+      });
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        fatherName: "",
+        motherName: "",
+        dateOfBirth: "",
+        gotra: "",
+        maritalStatus: "",
+        spouseName: "",
+        occupation: "",
+        annualIncome: "",
+        email: "",
+        phone: "",
+        alternatePhone: "",
+        currentAddress: "",
+        permanentAddress: "",
+        city: "",
+        district: "",
+        familyMembers: "",
+        businessDetails: "",
+        newsletter: false,
+        terms: false,
+        submissionDate: "",
+        status: "pending",
+        membershipId: "",
+        profilePhoto: null
+      });
+    } catch (error) {
+      toast({
+        title: "Registration Failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -283,6 +393,23 @@ const Membership = () => {
                         className="mt-1"
                       />
                     </div>
+
+                    <div>
+                      <Label htmlFor="annualIncome">Annual Income (NPR)</Label>
+                      <Select value={formData.annualIncome} onValueChange={(value) => handleInputChange("annualIncome", value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select income range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="below-500000">Below 5,00,000</SelectItem>
+                          <SelectItem value="500000-1000000">5,00,000 - 10,00,000</SelectItem>
+                          <SelectItem value="1000000-2000000">10,00,000 - 20,00,000</SelectItem>
+                          <SelectItem value="2000000-5000000">20,00,000 - 50,00,000</SelectItem>
+                          <SelectItem value="above-5000000">Above 50,00,000</SelectItem>
+                          <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
@@ -399,13 +526,36 @@ const Membership = () => {
                     Photo Upload
                   </h3>
                   
-                  <div className="border-2 border-dashed border-saffron-300 rounded-lg p-6 text-center">
+                  <div className="border-2 border-dashed border-saffron-300 rounded-lg p-6 text-center hover:border-saffron-400 transition-colors">
                     <Upload className="h-12 w-12 text-saffron-400 mx-auto mb-4" />
                     <p className="text-gray-600 mb-2">Upload your recent photograph</p>
                     <p className="text-sm text-gray-500">Supported formats: JPG, PNG (Max 2MB)</p>
-                    <Button type="button" variant="outline" className="mt-4">
-                      Choose File
-                    </Button>
+                    {formData.profilePhoto ? (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-green-600 font-medium">✓ {formData.profilePhoto.name}</p>
+                        <Button type="button" variant="outline" onClick={() => setFormData(prev => ({ ...prev, profilePhoto: null }))}>
+                          Remove Photo
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-4">
+                        <input
+                          type="file"
+                          id="profilePhoto"
+                          accept="image/jpeg,image/png,image/jpg"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => document.getElementById('profilePhoto')?.click()}
+                          className="animate-fade-in"
+                        >
+                          Choose File
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -436,7 +586,7 @@ const Membership = () => {
 
                 {/* Submit Button */}
                 <div className="pt-6">
-                  <Button 
+                  <Button
                     type="submit" 
                     className="w-full bg-maroon-600 hover:bg-maroon-700 text-white py-3 text-lg"
                   >

@@ -1,29 +1,38 @@
 
 import { useState } from "react";
-import { Calendar, Clock, MapPin, Users, Search, Filter } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Search, Filter, Eye, Share2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const Events = () => {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [favoriteEvents, setFavoriteEvents] = useState<number[]>([]);
+  const { toast } = useToast();
 
   const events = [
     {
       id: 1,
       title: "Teej Mahotsav 2024",
       description: "Traditional Teej festival celebration with cultural programs, dance, and feast",
+      fullDescription: "Join us for a grand celebration of Teej, one of the most important festivals in our culture. This event will feature traditional dance performances, cultural programs, and a community feast. Women will dress in traditional red and green attire, perform traditional songs and dances, and participate in the ritualistic worship. The event will also include storytelling sessions about the significance of Teej and its cultural importance in our community.",
       date: "2024-09-15",
       time: "10:00 AM - 6:00 PM",
       venue: "Community Hall, Kathmandu",
       category: "festival",
       status: "upcoming",
       image: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-      attendees: 150
+      attendees: 150,
+      contact: "9841234567",
+      organizer: "Cultural Committee",
+      requirements: "Traditional attire recommended"
     },
     {
       id: 2,
@@ -122,6 +131,37 @@ const Events = () => {
       : 'bg-gray-100 text-gray-600';
   };
 
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+  };
+
+  const toggleFavorite = (eventId: number) => {
+    setFavoriteEvents(prev => 
+      prev.includes(eventId) 
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
+    toast({
+      title: favoriteEvents.includes(eventId) ? "Removed from favorites" : "Added to favorites",
+      description: "Event preference updated successfully."
+    });
+  };
+
+  const handleRegister = (event: any) => {
+    toast({
+      title: "Registration Successful!",
+      description: `You have been registered for ${event.title}. Check your email for confirmation.`
+    });
+  };
+
+  const handleShare = (event: any) => {
+    navigator.clipboard.writeText(`Check out this event: ${event.title} on ${formatDate(event.date)}`);
+    toast({
+      title: "Event shared!",
+      description: "Event details copied to clipboard."
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-saffron-50 via-white to-emerald-50">
       {/* Hero Section */}
@@ -173,7 +213,11 @@ const Events = () => {
                     event.description.toLowerCase().includes(searchTerm.toLowerCase())
                   )
                   .map((event) => (
-                  <Card key={event.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200">
+                  <Card 
+                    key={event.id} 
+                    className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200 cursor-pointer transform hover:-translate-y-2 animate-fade-in"
+                    onClick={() => handleEventClick(event)}
+                  >
                     <div className="relative">
                       <img
                         src={event.image}
@@ -218,9 +262,49 @@ const Events = () => {
                         <span>{event.attendees} attendees</span>
                       </div>
                       
-                      <div className="pt-4">
-                        <Button className="w-full bg-saffron-600 hover:bg-saffron-700 text-white">
-                          Register Now
+                      <div className="pt-4 space-y-2">
+                        <div className="flex gap-2">
+                          <Button 
+                            className="flex-1 bg-saffron-600 hover:bg-saffron-700 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRegister(event);
+                            }}
+                          >
+                            Register Now
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(event.id);
+                            }}
+                            className={favoriteEvents.includes(event.id) ? "text-red-500" : ""}
+                          >
+                            <Heart className={`h-4 w-4 ${favoriteEvents.includes(event.id) ? "fill-current" : ""}`} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(event);
+                            }}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full text-saffron-600 hover:bg-saffron-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEventClick(event);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
                         </Button>
                       </div>
                     </CardContent>
@@ -245,7 +329,11 @@ const Events = () => {
                     event.description.toLowerCase().includes(searchTerm.toLowerCase())
                   )
                   .map((event) => (
-                  <Card key={event.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200">
+                  <Card 
+                    key={event.id} 
+                    className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-saffron-200 cursor-pointer transform hover:-translate-y-2 animate-fade-in"
+                    onClick={() => handleEventClick(event)}
+                  >
                     <div className="relative">
                       <img
                         src={event.image}
@@ -290,9 +378,49 @@ const Events = () => {
                         <span>{event.attendees} attendees</span>
                       </div>
                       
-                      <div className="pt-4">
-                        <Button className="w-full bg-gray-400 hover:bg-gray-500 text-white">
-                          View Gallery
+                      <div className="pt-4 space-y-2">
+                        <div className="flex gap-2">
+                          <Button 
+                            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Navigate to gallery for this event
+                            }}
+                          >
+                            View Gallery
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(event.id);
+                            }}
+                            className={favoriteEvents.includes(event.id) ? "text-red-500" : ""}
+                          >
+                            <Heart className={`h-4 w-4 ${favoriteEvents.includes(event.id) ? "fill-current" : ""}`} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(event);
+                            }}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full text-gray-600 hover:bg-gray-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEventClick(event);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
                         </Button>
                       </div>
                     </CardContent>
@@ -340,6 +468,117 @@ const Events = () => {
           </div>
         </div>
       </section>
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-3xl text-maroon-800">{selectedEvent.title}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <img
+                src={selectedEvent.image}
+                alt={selectedEvent.title}
+                className="w-full h-64 object-cover rounded-lg"
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-maroon-700">Event Details</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="h-5 w-5 text-saffron-600" />
+                      <span>{formatDate(selectedEvent.date)}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Clock className="h-5 w-5 text-emerald-600" />
+                      <span>{selectedEvent.time}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-maroon-600" />
+                      <span>{selectedEvent.venue}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Users className="h-5 w-5 text-gold-600" />
+                      <span>{selectedEvent.attendees} expected attendees</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Badge className={getCategoryColor(selectedEvent.category)}>
+                      {selectedEvent.category}
+                    </Badge>
+                    <Badge className={getStatusColor(selectedEvent.status)}>
+                      {selectedEvent.status}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-maroon-700">Additional Information</h3>
+                  
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Organizer:</span> {selectedEvent.organizer || "Cultural Committee"}</p>
+                    <p><span className="font-medium">Contact:</span> {selectedEvent.contact || "9841234567"}</p>
+                    <p><span className="font-medium">Requirements:</span> {selectedEvent.requirements || "None"}</p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {selectedEvent.status === 'upcoming' ? (
+                      <Button 
+                        className="w-full bg-saffron-600 hover:bg-saffron-700 text-white"
+                        onClick={() => handleRegister(selectedEvent)}
+                      >
+                        Register for Event
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full bg-gray-500 hover:bg-gray-600 text-white"
+                        onClick={() => {/* Navigate to gallery */}}
+                      >
+                        View Event Gallery
+                      </Button>
+                    )}
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => toggleFavorite(selectedEvent.id)}
+                      >
+                        <Heart className={`h-4 w-4 mr-2 ${favoriteEvents.includes(selectedEvent.id) ? "fill-current text-red-500" : ""}`} />
+                        {favoriteEvents.includes(selectedEvent.id) ? "Favorited" : "Add to Favorites"}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleShare(selectedEvent)}
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share Event
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold text-maroon-700 mb-3">About This Event</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {selectedEvent.fullDescription || selectedEvent.description}
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
